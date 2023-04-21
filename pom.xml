@@ -10,7 +10,6 @@
     </parent>
     <packaging>pom</packaging>
     <modules>
-        <module>login</module>
         <module>schedule</module>
         <module>UserService</module>
     </modules>
