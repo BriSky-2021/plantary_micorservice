@@ -6,10 +6,7 @@ import edu.tongji.plantary.user.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
@@ -22,7 +19,7 @@ public class LoginController {
     UserService userService;
 
     @ApiOperation(value = "登录")
-    @GetMapping("/login")
+    @PostMapping("/login")
     @ResponseBody
     public User login(String phone, String passwd){
         Optional<User> user= userService.login(phone,passwd);
@@ -31,7 +28,7 @@ public class LoginController {
     }
 
     @ApiOperation(value = "注册")
-    @GetMapping("/register")
+    @PostMapping("/register")
     @ResponseBody
     public User register(String phone, String passwd,String name ,String sex){
         Optional<User> user= userService.register(name,phone,passwd,sex);
