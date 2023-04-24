@@ -1,0 +1,15 @@
+server:
+  port: 8078
+
+
+
+swagger:
+  enable: true
+  application-name: plantary系统API说明
+  application-version: 1.0
+  application-description: springfox swagger 3.0整合Demo
+  try-host: http://localhost:${server.port}
+
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
