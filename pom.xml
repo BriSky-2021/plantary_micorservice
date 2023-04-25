@@ -12,6 +12,7 @@
     <modules>
         <module>schedule</module>
         <module>UserService</module>
+        <module>circle</module>
     </modules>
     <groupId>edu.tongji.plantary</groupId>
     <artifactId>plantary</artifactId>
