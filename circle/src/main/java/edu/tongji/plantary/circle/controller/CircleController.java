@@ -29,14 +29,14 @@ public class CircleController {
         return "ok";
     }
 
-    @ApiOperation(value = "圈子用户接口")
+    @ApiOperation(value = "获得所有帖子")
     @GetMapping("/posts")
     @ResponseBody
     public List<Post> getAllPost(){
         return postService.getAllPosts();
     }
 
-    @ApiOperation(value = "圈子用户接口")
+    @ApiOperation(value = "发评论")
     @PutMapping("/post/{postID}/comment")
     @ResponseBody
     public Comment addComment(@PathVariable String postID, UserItem userItem,String content){
@@ -59,11 +59,18 @@ public class CircleController {
 
     }
 
-    @ApiOperation(value = "圈子用户接口")
+    @ApiOperation(value = "用电话获取该博主所有帖子")
     @GetMapping("/post/{posterPhone}")
     @ResponseBody
     public List<Post> getPostByPosterPhone(@PathVariable String posterPhone){
         return postService.getPostByPosterPhone(posterPhone);
+    }
+
+    @ApiOperation(value = "用postID获取评论内容")
+    @GetMapping("/comment/{postID}")
+    @ResponseBody
+    public List<Comment> getCommentByPostID(@PathVariable String postID){
+        return postService.getCommentByPostID(postID);
     }
 
 }

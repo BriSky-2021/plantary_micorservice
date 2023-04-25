@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,6 +54,17 @@ public class PostServiceImpl implements PostService {
             return Optional.of(comment);
         }else{
             return Optional.empty();
+        }
+    }
+
+    @Override
+    public List<Comment> getCommentByPostID(String postID) {
+        Optional<Post> post=postDao.findById(postID);
+        List<Comment> comments=new ArrayList<>();
+        if(post.isPresent()){
+            return post.get().getUserCommentList();
+        }else{
+            return comments;
         }
     }
 
