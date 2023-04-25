@@ -11,6 +11,7 @@ public class Post {
     String _id;//自动生成，不必赋值
     UserItem poster;
     String content;
+    String releaseTime;
     List<String> pics;
     List<UserItem> userLikedList;
     List<Comment> userCommentList;

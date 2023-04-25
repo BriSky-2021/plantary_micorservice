@@ -73,4 +73,18 @@ public class CircleController {
         return postService.getCommentByPostID(postID);
     }
 
+    @ApiOperation(value = "发帖子")
+    @PutMapping("/post")
+    @ResponseBody
+    public Optional<Post> putPost( String postContent,String postPicture,UserItem userItem){
+        return postService.putPost(postContent,postPicture,userItem);
+    }
+
+    @ApiOperation(value = "多图片发帖子")
+    @PutMapping("/postByPictures")
+    @ResponseBody
+    public Optional<Post> putPost( String postContent,List<String> postPictures,UserItem userItem){
+        return postService.putPostByPictures(postContent,postPictures,userItem);
+    }
+
 }

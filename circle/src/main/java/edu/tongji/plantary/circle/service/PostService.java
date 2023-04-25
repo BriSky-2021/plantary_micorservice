@@ -2,6 +2,7 @@ package edu.tongji.plantary.circle.service;
 
 import edu.tongji.plantary.circle.entity.Comment;
 import edu.tongji.plantary.circle.entity.Post;
+import edu.tongji.plantary.circle.entity.UserItem;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
@@ -20,5 +21,9 @@ public interface PostService {
     List<Comment> getCommentByPostID(String postID);
 
     List<Post> getPostByPosterPhone(String posterPhone);
+
+    Optional<Post> putPost(String postContent, String postPicture, UserItem userItem);
+
+    Optional<Post> putPostByPictures(String postContent, List<String> postPictures, UserItem userItem);
 
 }

@@ -3,14 +3,14 @@ package edu.tongji.plantary.circle.service.impl;
 import edu.tongji.plantary.circle.dao.PostDao;
 import edu.tongji.plantary.circle.entity.Comment;
 import edu.tongji.plantary.circle.entity.Post;
+import edu.tongji.plantary.circle.entity.UserItem;
 import edu.tongji.plantary.circle.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Service
 public class PostServiceImpl implements PostService {
@@ -48,6 +48,12 @@ public class PostServiceImpl implements PostService {
         if(post.isPresent()){
 
             Post post1=post.get();
+
+            if(post1.getUserCommentList()==null){
+                post1.setUserCommentList(new ArrayList<>());
+            }
+
+
             post1.getUserCommentList().add(comment);
             postDao.save(post1);
 
@@ -72,4 +78,45 @@ public class PostServiceImpl implements PostService {
     public List<Post> getPostByPosterPhone(String posterPhone) {
         return postDao.findByPosterPhone(posterPhone);
     }
+
+    @Override
+    public Optional<Post> putPost(String postContent, String postPicture, UserItem userItem) {
+
+        Post post=new Post();
+        post.setContent(postContent);
+        post.setPics(Arrays.asList(postPicture));
+        post.setPoster(userItem);
+        Date date = new Date();
+        SimpleDateFormat dateFormat= new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        post.setReleaseTime(dateFormat.format(date));
+        Post ret=mongoTemplate.insert(post);
+
+        if(ret==null){
+            return Optional.empty();
+        }else{
+            return Optional.of(ret);
+        }
+
+    }
+
+    @Override
+    public Optional<Post> putPostByPictures(String postContent, List<String> postPictures, UserItem userItem) {
+
+        Post post=new Post();
+        post.setContent(postContent);
+        post.setPics(postPictures);
+        post.setPoster(userItem);
+        Date date = new Date();
+        SimpleDateFormat dateFormat= new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        post.setReleaseTime(dateFormat.format(date));
+        Post ret=mongoTemplate.insert(post);
+
+        if(ret==null){
+            return Optional.empty();
+        }else{
+            return Optional.of(ret);
+        }
+
+    }
+
 }
