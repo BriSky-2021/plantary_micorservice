@@ -26,4 +26,6 @@ public interface PostService {
 
     Optional<Post> putPostByPictures(String postContent, List<String> postPictures, UserItem userItem);
 
+    List<Post> getPostsByThemeName(String themeName);
+
 }

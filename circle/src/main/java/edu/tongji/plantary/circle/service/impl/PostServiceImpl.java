@@ -119,4 +119,9 @@ public class PostServiceImpl implements PostService {
 
     }
 
+    @Override
+    public List<Post> getPostsByThemeName(String themeName) {
+        return postDao.findByThemeName(themeName);
+    }
+
 }

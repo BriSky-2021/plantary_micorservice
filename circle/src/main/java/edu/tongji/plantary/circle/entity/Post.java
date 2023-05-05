@@ -10,6 +10,7 @@ import java.util.List;
 public class Post {
     String _id;//自动生成，不必赋值
     UserItem poster;
+    String themeName;//主题圈的名字
     String content;
     String releaseTime;
     List<String> pics;

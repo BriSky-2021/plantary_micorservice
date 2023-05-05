@@ -1,9 +1,12 @@
 package edu.tongji.plantary.circle.controller;
 
+import edu.tongji.plantary.circle.dao.ThemeDao;
 import edu.tongji.plantary.circle.entity.Comment;
 import edu.tongji.plantary.circle.entity.Post;
+import edu.tongji.plantary.circle.entity.Theme;
 import edu.tongji.plantary.circle.entity.UserItem;
 import edu.tongji.plantary.circle.service.PostService;
+import edu.tongji.plantary.circle.service.ThemeService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,18 +25,23 @@ public class CircleController {
     @Autowired
     PostService postService;
 
-    @ApiOperation(value = "测试")
-    @GetMapping("/test")
-    @ResponseBody
-    public String test(){
-        return "ok";
-    }
+    @Autowired
+    ThemeService themeService;
+
 
     @ApiOperation(value = "获得所有帖子")
     @GetMapping("/posts")
     @ResponseBody
     public List<Post> getAllPost(){
         return postService.getAllPosts();
+    }
+
+
+    @ApiOperation(value = "获得某主题圈的所有帖子")
+    @GetMapping("/postByThemeName")
+    @ResponseBody
+    public List<Post> getPostsByThemeName(String themeName) {
+        return postService.getPostsByThemeName(themeName);
     }
 
     @ApiOperation(value = "发评论")
@@ -86,5 +94,42 @@ public class CircleController {
     public Optional<Post> putPost( String postContent,List<String> postPictures,UserItem userItem){
         return postService.putPostByPictures(postContent,postPictures,userItem);
     }
+
+
+    //*****************
+    //以下为ThemeService
+    //*****************
+
+    @ApiOperation(value = "获取所有圈子")
+    @GetMapping("/themes")
+    @ResponseBody
+    public List<Theme> getThemes(){
+        return themeService.getThemeList();
+    }
+
+
+    @ApiOperation(value = "通过名字获取圈子")
+    @GetMapping("/theme/{themeName}")
+    @ResponseBody
+    public Optional<Theme> getThemeByName(@PathVariable String themeName){
+        return themeService.findByName(themeName);
+    }
+
+
+    @ApiOperation(value = "更新主题圈状态")
+    @PostMapping("/theme/{themeName}")
+    @ResponseBody
+    public void updateThemeStateByName(@PathVariable String themeName){
+        themeService.updateThemeStateByName(themeName);
+    }
+
+
+    @ApiOperation(value = "添加主题圈")
+    @PutMapping("/theme/{themeName}")
+    @ResponseBody
+    Optional<Theme> addTheme(@PathVariable String themeName,String themePicture){
+        return themeService.addTheme(themeName,themePicture);
+    }
+
 
 }
