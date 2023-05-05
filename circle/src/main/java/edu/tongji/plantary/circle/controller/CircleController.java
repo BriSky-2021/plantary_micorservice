@@ -88,6 +88,13 @@ public class CircleController {
         return postService.putPost(postContent,postPicture,userItem);
     }
 
+    @ApiOperation(value = "在主题圈发帖子")
+    @PutMapping("/postByThemeName")
+    @ResponseBody
+    public Optional<Post> putPostByThemeName(String themeName, String postContent,String postPicture,UserItem userItem){
+        return postService.putPostByThemeName(themeName,postContent,postPicture,userItem);
+    }
+
     @ApiOperation(value = "多图片发帖子")
     @PutMapping("/postByPictures")
     @ResponseBody

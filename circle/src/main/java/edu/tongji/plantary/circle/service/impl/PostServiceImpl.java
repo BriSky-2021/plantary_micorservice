@@ -100,6 +100,25 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public Optional<Post> putPostByThemeName(String ThemeName, String postContent, String postPicture, UserItem userItem) {
+        Post post=new Post();
+        post.setContent(postContent);
+        post.setPics(Arrays.asList(postPicture));
+        post.setPoster(userItem);
+        post.setThemeName(ThemeName);
+        Date date = new Date();
+        SimpleDateFormat dateFormat= new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        post.setReleaseTime(dateFormat.format(date));
+        Post ret=mongoTemplate.insert(post);
+
+        if(ret==null){
+            return Optional.empty();
+        }else{
+            return Optional.of(ret);
+        }
+    }
+
+    @Override
     public Optional<Post> putPostByPictures(String postContent, List<String> postPictures, UserItem userItem) {
 
         Post post=new Post();
