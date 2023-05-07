@@ -49,8 +49,8 @@ public class ScheduleController {
     @ResponseBody
     public Task addTask(Task task){
         if(task.isDayLong()){ //全日日程不记录时刻数据
-            task.setStartTime(null);
-            task.setEndTime(null);
+//            task.setStartTime(null);
+//            task.setEndTime(null);
         }
 
         return(taskService.addTask(task));
