@@ -13,6 +13,7 @@
         <module>schedule</module>
         <module>UserService</module>
         <module>circle</module>
+        <module>health</module>
     </modules>
     <groupId>edu.tongji.plantary</groupId>
     <artifactId>plantary</artifactId>
