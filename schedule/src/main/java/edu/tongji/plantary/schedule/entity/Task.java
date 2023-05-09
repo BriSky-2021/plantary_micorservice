@@ -1,15 +1,15 @@
 package edu.tongji.plantary.schedule.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Date;
-import java.util.List;
 
 /**
  * TODO: 为了间接初步功能实现，没有考虑重复日程
@@ -18,11 +18,12 @@ import java.util.List;
 @Data
 @Document("Task")
 public class Task {
+    private String _id;//自动生成，不必赋值
     private String userId; //电话号码
     private String title;
     private String desc;
-    private boolean isCompleted=false;
-    private boolean isDayLong; //全天活动，则没有时分秒，两个日期最好相同
+    private boolean completed =false;
+    private boolean dayLong; //全天活动，则没有时分秒，两个日期最好相同
 //    private boolean isRepeatable=false; //TODO:可重复，初步只考虑每日，不考虑截至日期
     /**
      * 时刻
@@ -51,8 +52,10 @@ public class Task {
      * 时刻
      * TODO: swagger无法测试，只能apifox
      */
+    @JsonFormat(pattern = "HH:mm") //出参 后端->前端
     @DateTimeFormat(pattern = "HH:mm")  //入参 前端->后端 HH:mm字符串
     private LocalTime startTime;
+    @JsonFormat(pattern = "HH:mm") //出参 后端->前端
     @DateTimeFormat(pattern = "HH:mm")  //入参 前端->后端 HH:mm字符串
     private LocalTime endTime;
 }

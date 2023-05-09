@@ -24,6 +24,15 @@ public class TaskServiceImpl implements TaskService {
         Optional<Task> task= taskDao.findByTitle(title);
         return task;
     }
+    @Override
+    public void deleteTaskById(String _id) {
+        taskDao.deleteById(_id);
+    }
+
+    @Override
+    public Task update(Task task) {
+        return taskDao.save(task);
+    }
 
     @Override
     public List<Task> getTasks() {

@@ -9,6 +9,10 @@ public interface TaskService {
 
     Optional<Task> getUserInfoByTitle(String title);
 
+    void deleteTaskById(String _id);
+
+    Task update(Task task);
+
     List<Task> getTasks();
 
     Task addTask(Task task);

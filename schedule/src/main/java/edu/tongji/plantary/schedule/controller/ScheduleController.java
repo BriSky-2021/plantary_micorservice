@@ -24,11 +24,7 @@ public class ScheduleController {
     public Task getTaskByDate(@PathVariable String date){
 
         Optional<Task> task=taskService.getUserInfoByTitle(date);
-        if(task.isPresent()){
-            return task.get();
-        }else{
-            return null;
-        }
+        return task.orElse(null);
     }
 
     @ApiOperation(value = "获取所有事件")
@@ -44,15 +40,34 @@ public class ScheduleController {
         }
     }
 
+    @ApiOperation(value = "删除task")
+    @DeleteMapping("/task/{_id}")
+    @ResponseBody
+    public boolean deleteTask(@PathVariable String _id){
+        taskService.deleteTaskById(_id);
+        return true;
+    }
+
+    @ApiOperation(value = "更新task")
+    @PutMapping("task")
+    @ResponseBody
+    public Task updateTask(@RequestBody Task task){
+        if(task.isDayLong()){ //全日日程不记录时刻数据
+            task.setStartTime(null);
+            task.setEndTime(null);
+        }
+        return taskService.update(task);
+    }
+
     @ApiOperation(value = "新增事件")
     @PostMapping("/addTask")
     @ResponseBody
-    public Task addTask(Task task){
+    public Task addTask(@RequestBody Task task){
         if(task.isDayLong()){ //全日日程不记录时刻数据
-//            task.setStartTime(null);
-//            task.setEndTime(null);
+            task.setStartTime(null);
+            task.setEndTime(null);
         }
-
+        task.set_id(null);  //需要由数据库生成
         return(taskService.addTask(task));
     }
 
