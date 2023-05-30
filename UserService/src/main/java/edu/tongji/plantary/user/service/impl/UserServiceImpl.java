@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,9 +34,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> register(String name, String phone, String passwd ,String sex) {
 
-        //先查找phone有没有被注册
+        //先对关键属性进行检查
+        if(name==null || phone==null || passwd ==null ){
+            return Optional.empty();
+        }
+
+        //查找phone有没有被注册
         Optional<User> users=userDao.findByPhone(phone);
-        if(users.isPresent()){
+        if(users.isPresent()){//电话号码已经被注册，则不予注册
             System.out.println(users.get());
             System.out.println("电话号码已被注册");
             return Optional.empty();
@@ -43,11 +49,22 @@ public class UserServiceImpl implements UserService {
 
         //再进行注册
         User user = new User();
-        //user.setId(123);
-        user.setSex(sex);
+
+        //检测性别是不是三种之一
+        List<String> avalible_sexs= Arrays.asList("男","女","非二元性别");
+
+        //如果不选择性别或者性别并非给定的三种之一
+        if(sex==null || !avalible_sexs.contains(sex)){
+            user.setSex("非二元性别");
+        }else{
+            user.setSex(sex);
+        }
+        //设置属性
         user.setPhone(phone);
         user.setName(name);
         user.setPasswd(passwd);
+        //设置头像默认值
+        user.setAvatar("https://img.ddtouxiang.com/upload/images/20230529/2023052908353959421.jpg");
         User user1 = mongoTemplate.insert(user);
 
         return Optional.of(user1);

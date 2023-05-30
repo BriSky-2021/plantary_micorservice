@@ -22,7 +22,6 @@ public class ThemeServiceImpl implements ThemeService {
     @Autowired
     ThemeDao themeDao;
 
-    //TODO:可能引起问题
     @Autowired
     PostDao postDao;
 
