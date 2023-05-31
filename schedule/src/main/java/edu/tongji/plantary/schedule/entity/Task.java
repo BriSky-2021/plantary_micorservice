@@ -52,10 +52,10 @@ public class Task {
      * 时刻
      * TODO: swagger无法测试，只能apifox
      */
-    @JsonFormat(pattern = "HH:mm") //出参 后端->前端
-    @DateTimeFormat(pattern = "HH:mm")  //入参 前端->后端 HH:mm字符串
+    @JsonFormat(timezone = "Asia/Shanghai", pattern = "HH:mm") //出参 后端->前端 时区，传给前端需要设置东八区
+    @DateTimeFormat(pattern = "HH:mm")  //入参 前端->后端 HH:mm字符串 https://zhuanlan.zhihu.com/p/147271819
     private LocalTime startTime;
-    @JsonFormat(pattern = "HH:mm") //出参 后端->前端
+    @JsonFormat(timezone = "Asia/Shanghai", pattern = "HH:mm") //出参 后端->前端 时区，传给前端需要设置东八区
     @DateTimeFormat(pattern = "HH:mm")  //入参 前端->后端 HH:mm字符串
     private LocalTime endTime;
 }

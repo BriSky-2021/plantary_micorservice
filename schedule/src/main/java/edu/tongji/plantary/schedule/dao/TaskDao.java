@@ -1,6 +1,7 @@
 package edu.tongji.plantary.schedule.dao;
 
 import edu.tongji.plantary.schedule.entity.Task;
+import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -13,5 +14,10 @@ public interface TaskDao extends MongoRepository<Task,String> {
 
     @Query(value = "{'title':'?0'}")
     Optional<Task> findByTitle(String title);
+
+//    @Query(value = "{'userId':'?0'}")
+    List<Task> findByUserId(String userId);
+    List<Task> findTasksByUserId(String userId);
+
 
 }

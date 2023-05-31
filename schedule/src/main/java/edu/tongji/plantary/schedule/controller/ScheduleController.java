@@ -5,10 +5,12 @@ import edu.tongji.plantary.schedule.service.TaskService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 @Api(tags = "日程接口")
 @RestController
@@ -18,15 +20,6 @@ public class ScheduleController {
     @Autowired
     TaskService taskService;
 
-    @ApiOperation(value = "以日期获取事件")
-    @GetMapping("/task/{date}")
-    @ResponseBody
-    public Task getTaskByDate(@PathVariable String date){
-
-        Optional<Task> task=taskService.getUserInfoByTitle(date);
-        return task.orElse(null);
-    }
-
     @ApiOperation(value = "获取所有事件")
     @GetMapping("/tasks")
     @ResponseBody
@@ -35,6 +28,32 @@ public class ScheduleController {
         List<Task> task=taskService.getTasks();
         if(task.size()!=0){
             return task;
+        }else{
+            return null;
+        }
+    }
+
+    @ApiOperation(value = "获取某用户的所有事件")
+    @GetMapping("/tasks/{userId}")
+    @ResponseBody
+    public List<Task> getTasksByUserId(@PathVariable String userId){
+
+        List<Task> tasks=taskService.getTasksByUserId(userId);
+        if(tasks.size()!=0){
+            return tasks;
+        }else{
+            return null;
+        }
+    }
+
+    @ApiOperation(value = "获取某用户的所有事件")
+    @GetMapping("/tasks/{userId}/{date}")
+    @ResponseBody
+    public List<Task> getTasksByUserIdAndDate(@PathVariable String userId,@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date){
+
+        List<Task> tasks=taskService.getTasksByUserIdAndDate(userId,date);
+        if(tasks.size()!=0){
+            return tasks;
         }else{
             return null;
         }
