@@ -49,15 +49,15 @@ public class CircleController {
     @ResponseBody
     public Comment addComment(@PathVariable String postID, UserItem userItem,String content){
 
-
+        //获取时间
         Date date = new Date();
         SimpleDateFormat dateFormat= new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-
+        //构造
         Comment comment=new Comment();
         comment.setReleaseTime(dateFormat.format(date));
         comment.setUserItem(userItem);
         comment.setContent(content);
-
+        //调用服务
         Optional<Comment> comment1= postService.addComment(postID,comment);
         if (comment1.isPresent()){
             return comment1.get();

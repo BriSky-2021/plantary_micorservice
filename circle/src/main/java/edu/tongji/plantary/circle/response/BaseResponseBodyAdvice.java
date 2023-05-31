@@ -32,7 +32,6 @@ public class BaseResponseBodyAdvice implements ResponseBodyAdvice<Object> {
         // 在此处拦截到feign标识字段, 则直接放行 返回body.
 
 
-
         // 这里需要过滤掉swagger的相关返回
 
         if (body instanceof BaseResponse || body instanceof Json || body instanceof UiConfiguration || (body instanceof ArrayList && ((ArrayList) body).get(0) instanceof SwaggerResource)) {
