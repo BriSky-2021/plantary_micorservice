@@ -23,6 +23,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     UserDao userDao;
 
+    // TODO: 测试这个函数 加入参数检测
     @Override
     public Optional<User> login(String phone, String passwd) {
 
@@ -31,6 +32,7 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
+    // TODO: 测试这个函数
     @Override
     public Optional<User> register(String name, String phone, String passwd ,String sex) {
 
@@ -81,6 +83,7 @@ public class UserServiceImpl implements UserService {
         return userDao.findAll();
     }
 
+    // TODO: 测试这个函数 正交法
     @Override
     public Optional<User> modifyUserInfo(User user) {
 

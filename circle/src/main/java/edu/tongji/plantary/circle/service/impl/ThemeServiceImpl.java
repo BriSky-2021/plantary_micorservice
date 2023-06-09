@@ -38,6 +38,7 @@ public class ThemeServiceImpl implements ThemeService {
         return themeDao.findByName(themeName);
     }
 
+    // TODO: 测试这个函数
     @Override
     public void updateThemeStateByName(String themeName) {
 
@@ -61,12 +62,12 @@ public class ThemeServiceImpl implements ThemeService {
         Update update = new Update();
         update.set("postsCount",postCount);
         update.set("likesCount",likesCount);
-        //TODO postIDS没有赋值
         mongoTemplate.updateFirst(query,update,Theme.class);
 
 
     }
 
+    // TODO: 测试这个函数
     @Override
     public Optional<Theme> addTheme(String themeName, String themePicture) {
 

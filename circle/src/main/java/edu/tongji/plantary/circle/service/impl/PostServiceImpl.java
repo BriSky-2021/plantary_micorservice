@@ -41,6 +41,7 @@ public class PostServiceImpl implements PostService {
         return Optional.empty();
     }
 
+    // TODO: 测试这个函数
     @Override
     public Optional<Comment> addComment(String postID, Comment comment) {
 
@@ -79,6 +80,7 @@ public class PostServiceImpl implements PostService {
         return postDao.findByPosterPhone(posterPhone);
     }
 
+    // TODO: 测试这个函数
     @Override
     public Optional<Post> putPost(String postContent, String postPicture, UserItem userItem) {
 
@@ -99,6 +101,7 @@ public class PostServiceImpl implements PostService {
 
     }
 
+    // TODO: 测试这个函数
     @Override
     public Optional<Post> putPostByThemeName(String ThemeName, String postContent, String postPicture, UserItem userItem) {
         Post post=new Post();
@@ -118,6 +121,7 @@ public class PostServiceImpl implements PostService {
         }
     }
 
+    // TODO: 测试这个函数
     @Override
     public Optional<Post> putPostByPictures(String postContent, List<String> postPictures, UserItem userItem) {
 

@@ -5,6 +5,7 @@ import edu.tongji.plantary.health.entity.HealthInfo;
 import edu.tongji.plantary.health.service.HealthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +28,7 @@ public class HealthServiceImpl implements HealthService {
 
     @Override
     public List<HealthInfo> getHealthInfoByPhoneAndDate(String phone, String startDate, String endDate) {
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
@@ -40,7 +41,7 @@ public class HealthServiceImpl implements HealthService {
         healthInfo.setUserPhone(phone);
         healthInfo.setExerciseIntensity(exerciseIntensity);
 
-        HealthInfo ret =healthDao.insert(healthInfo);
+        HealthInfo ret =healthDao.insert(healthInfo);   // TODO: 注意一下这个返回值是什么, 会不会抛异常
         if(ret==null){
             return Optional.empty();
         }else{
