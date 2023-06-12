@@ -21,10 +21,9 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
 @ExtendWith(AllureJunit5.class)
-@Epic("User DAO Tests Epic")
-@Feature("User DAO Feature")
+@Epic("用户DAO层测试")
+@Feature("用户DAO层测试")
 public class UserDaoTest {
 
     @Mock
