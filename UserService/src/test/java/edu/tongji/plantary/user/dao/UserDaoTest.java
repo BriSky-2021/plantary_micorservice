@@ -3,7 +3,9 @@ package edu.tongji.plantary.user.dao;
 import edu.tongji.plantary.user.dao.UserDao;
 import edu.tongji.plantary.user.entity.User;
 import io.qameta.allure.*;
+import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -145,4 +147,44 @@ public class UserDaoTest {
         verify(userDao, times(1)).findByPasswd(passwd);
     }
 
+    @Test
+    @DisplayName("Sample Success Test")
+    @Description("Test the sampleSuccess method in UserDao")
+    @Story("Sample Success")
+    void successSample(){
+        int a = 1;
+        int b = 2;
+        assertEquals(3, a+b);
+    }
+
+    @Test
+    @DisplayName("Sample Fail Test")
+    @Description("Test the sampleFail method in UserDao")
+    @Story("Sample Fail")
+    void failSample(){
+        int a = 1;
+        int b = 2;
+        assertEquals(4, a+b);
+    }
+
+    @Test
+    @Disabled
+    @DisplayName("Sample Skip Test")
+    @Description("Test the sampleSkip method in UserDao")
+    @Story("Sample Skip")
+    void skipSample(){
+        int a = 1;
+        int b = 2;
+        assertEquals(3, a+b);
+    }
+
+    @Test
+    @DisplayName("Sample Exception Test")
+    @Description("Test the sampleException method in UserDao")
+    @Story("Sample Exception")
+    void exceptionSample(){
+        int a = 1;
+        int b = 0;
+        assertEquals(3, a/b);
+    }
 }

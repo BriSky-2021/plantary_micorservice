@@ -1,0 +1,6 @@
+"Epic","Feature","Story","FAILED","BROKEN","PASSED","SKIPPED","UNKNOWN"
+"User DAO Tests Epic","User DAO Feature","Sample Fail","1","0","0","0","0"
+"User DAO Tests Epic","User DAO Feature","Sample Exception","0","1","0","0","0"
+"User DAO Tests Epic","User DAO Feature","User DAO","0","0","4","0","0"
+"User DAO Tests Epic","User DAO Feature","Sample Skip","0","0","0","1","0"
+"User DAO Tests Epic","User DAO Feature","Sample Success","0","0","1","0","0"
