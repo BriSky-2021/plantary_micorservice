@@ -1,24 +1,24 @@
 package edu.tongji.plantary.user.dao;
 
-import edu.tongji.plantary.user.dao.UserDao;
 import edu.tongji.plantary.user.entity.User;
-import io.qameta.allure.*;
-import jdk.nashorn.internal.ir.annotations.Ignore;
+import io.qameta.allure.Description;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+import io.qameta.allure.junit5.AllureJunit5;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import static org.junit.jupiter.api.Assertions.*;
-import io.qameta.allure.junit5.AllureJunit5;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
