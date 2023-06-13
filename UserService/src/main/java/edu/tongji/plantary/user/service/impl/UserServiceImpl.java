@@ -23,13 +23,25 @@ public class UserServiceImpl implements UserService {
     @Autowired
     UserDao userDao;
 
-    // TODO: 测试这个函数 加入参数检测
     @Override
     public Optional<User> login(String phone, String passwd) {
+        if (phone == null || phone.isEmpty()) {
+            throw new IllegalArgumentException("Phone number cannot be null or empty.");
+        }
 
-        Optional<User> user=userDao.validatePasswd(phone,passwd);
+        if (passwd == null || passwd.isEmpty()) {
+            throw new IllegalArgumentException("Password cannot be null or empty.");
+        }
 
-        return user;
+        if (!phone.matches("\\d{11}")) {
+            throw new IllegalArgumentException("Phone number must be 11 digits.");
+        }
+
+        if (passwd.length() < 4 || passwd.length() > 50) {
+            throw new IllegalArgumentException("Password length must be between 4 and 50.");
+        }
+
+        return userDao.validatePasswd(phone,passwd);
     }
 
     // TODO: 测试这个函数
