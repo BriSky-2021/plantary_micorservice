@@ -22,12 +22,12 @@ public class UserController {
     @ApiOperation(value = "以电话号码获取用户")
     @GetMapping("/userinfo/{phone}")
     @ResponseBody
-    public User getUserInfoByPhone(@PathVariable String phone){
+    public User getUserInfoByPhone(@PathVariable String phone) {
 
-        Optional<User> user=userService.getUserInfoByPhone(phone);
-        if(user.isPresent()){
+        Optional<User> user = userService.getUserInfoByPhone(phone);
+        if (user.isPresent()) {
             return user.get();
-        }else{
+        } else {
             return null;
         }
     }
@@ -35,30 +35,30 @@ public class UserController {
     @ApiOperation(value = "获取所有用户")
     @GetMapping("/userinfos")
     @ResponseBody
-    public List<User> getUserInfos(){
+    public List<User> getUserInfos() {
 
-        List<User> user=userService.getUserInfos();
-        if(user.size()!=0){
+        List<User> user = userService.getUserInfos();
+        if (user.size() != 0) {
             return user;
-        }else{
+        } else {
             return null;
         }
     }
 
     @ApiOperation(value = "更改用户信息")
-    @PostMapping ("/userinfo/{phone}")
+    @PostMapping("/userinfo/{phone}")
     @ResponseBody
-    public User modifyUserInfo(User user){
+    public User modifyUserInfo(User user) {
 
-        Optional<User> user1=userService.getUserInfoByPhone(user.getPhone());
-        if(!user1.isPresent()){
+        Optional<User> user1 = userService.getUserInfoByPhone(user.getPhone());
+        if (!user1.isPresent()) {
             return null;
         }
         //如果用户存在，执行下列命令
-        Optional<User> newUser=userService.modifyUserInfo(user);
-        if(newUser.isPresent()){
+        Optional<User> newUser = userService.modifyUserInfo(user);
+        if (newUser.isPresent()) {
             return user;
-        }else{
+        } else {
             return null;
         }
     }

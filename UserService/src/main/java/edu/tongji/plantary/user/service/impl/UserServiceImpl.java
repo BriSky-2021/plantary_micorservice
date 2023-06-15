@@ -3,6 +3,7 @@ package edu.tongji.plantary.user.service.impl;
 import edu.tongji.plantary.user.dao.UserDao;
 import edu.tongji.plantary.user.entity.User;
 import edu.tongji.plantary.user.service.UserService;
+import edu.tongji.plantary.user.service.UserValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -25,21 +27,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<User> login(String phone, String passwd) {
-        if (phone == null || phone.isEmpty()) {
-            throw new IllegalArgumentException("Phone number cannot be null or empty.");
-        }
-
-        if (passwd == null || passwd.isEmpty()) {
-            throw new IllegalArgumentException("Password cannot be null or empty.");
-        }
-
-        if (!phone.matches("\\d{11}")) {
-            throw new IllegalArgumentException("Phone number must be 11 digits.");
-        }
-
-        if (passwd.length() < 4 || passwd.length() > 50) {
-            throw new IllegalArgumentException("Password length must be between 4 and 50.");
-        }
+        // 参数校验
+        UserValidator.validatePhone(phone);
+        UserValidator.validatePassword(passwd);
 
         return userDao.validatePasswd(phone,passwd);
     }
@@ -47,41 +37,35 @@ public class UserServiceImpl implements UserService {
     // TODO: 测试这个函数
     @Override
     public Optional<User> register(String name, String phone, String passwd ,String sex) {
+        // 参数校验
+        UserValidator.validateName(name);
+        UserValidator.validatePhone(phone);
+        UserValidator.validatePassword(passwd);
 
-        //先对关键属性进行检查
-        if(name==null || phone==null || passwd ==null ){
+        // 检查数据库中是否已经存在该用户
+        Optional<User> existingUser = userDao.findByPhone(phone);
+        if (existingUser.isPresent()) {
+            System.out.println("Phone number already registered.");
             return Optional.empty();
         }
 
-        //查找phone有没有被注册
-        Optional<User> users=userDao.findByPhone(phone);
-        if(users.isPresent()){//电话号码已经被注册，则不予注册
-            System.out.println(users.get());
-            System.out.println("电话号码已被注册");
-            return Optional.empty();
-        }
-
-        //再进行注册
+        // 创建新用户
         User user = new User();
+        List<String> availableSexes = Arrays.asList("男", "女", "非二元性别");
+        String userSex = (sex == null || !availableSexes.contains(sex)) ? "非二元性别" : sex;
 
-        //检测性别是不是三种之一
-        List<String> avalible_sexs= Arrays.asList("男","女","非二元性别");
-
-        //如果不选择性别或者性别并非给定的三种之一
-        if(sex==null || !avalible_sexs.contains(sex)){
-            user.setSex("非二元性别");
-        }else{
-            user.setSex(sex);
-        }
-        //设置属性
+        // 设置用户信息
         user.setPhone(phone);
         user.setName(name);
         user.setPasswd(passwd);
-        //设置头像默认值
+        user.setSex(userSex);
         user.setAvatar("https://img.ddtouxiang.com/upload/images/20230529/2023052908353959421.jpg");
-        User user1 = mongoTemplate.insert(user);
 
-        return Optional.of(user1);
+        // 将用户信息插入数据库
+        User registeredUser = mongoTemplate.insert(user);
+
+        // 返回注册成功的用户信息
+        return Optional.of(registeredUser);
     }
 
     @Override
@@ -98,41 +82,76 @@ public class UserServiceImpl implements UserService {
     // TODO: 测试这个函数 正交法
     @Override
     public Optional<User> modifyUserInfo(User user) {
+        // 检查参数对象和关键字段是否为null
+        Objects.requireNonNull(user, "User object cannot be null.");
+        Objects.requireNonNull(user.getPhone(), "Phone number cannot be null.");
 
-        Optional<User> user1=userDao.findByPhone(user.getPhone());
-        if(!user1.isPresent()){//不存在则不修改
+        // 查询数据库中是否存在该用户
+        Optional<User> existingUser = userDao.findByPhone(user.getPhone());
+        if (!existingUser.isPresent()) {
             return Optional.empty();
         }
 
-        Query query = new Query(Criteria.where("phone").is(user.getPhone()));
-        Update update = new Update();
-        //如果存在且非空则修改，不考虑列表信息
-        if(user1.get().getAge()==null || user.getAge()!=null){
-            update.set("age",user.getAge());
+        // 参数校验
+        if (user.getName() != null) {
+            UserValidator.validateName(user.getName());
         }
-        if(user1.get().getName()==null || user.getName()!=null){
-            update.set("name",user.getName());
+        if (user.getAge() != null) {
+            UserValidator.validateAge(user.getAge());
         }
-        if(user1.get().getPasswd()==null || user.getPasswd()!=null){
-            update.set("passwd",user.getPasswd());
+        if (user.getPasswd() != null) {
+            UserValidator.validatePassword(user.getPasswd());
         }
-        if(user1.get().getBracelet()==null || user.getBracelet()!=null){
-            update.set("bracelet",user.getBracelet());
+        if (user.getPhone() != null) {
+            UserValidator.validatePhone(user.getPhone());
         }
-        if(user1.get().getSex()==null || user.getSex()!=null){
-            update.set("sex",user.getSex());
+        if (user.getBracelet() != null) {
+            UserValidator.validateBracelet(user.getBracelet());
         }
-        if(user1.get().getAvatar()==null || user.getAvatar()!=null){
-            update.set("avatar",user.getAvatar());
+        if (user.getSex() != null) {
+            UserValidator.validateSex(user.getSex());
         }
-        if(user1.get().getWeight()==null || user.getWeight()!=null){
-            update.set("weight",user.getWeight());
+        if (user.getAvatar() != null) {
+            UserValidator.validateAvatar(user.getAvatar());
         }
-        if(user1.get().getHeight()==null || user.getHeight()!=null){
-            update.set("height",user.getHeight());
+        if (user.getWeight() != null) {
+            UserValidator.validateWeight(user.getWeight());
+        }
+        if (user.getHeight() != null) {
+            UserValidator.validateHeight(user.getHeight());
         }
 
-        mongoTemplate.updateFirst(query,update,User.class);
+        // 构建查询条件和更新对象
+        Query query = new Query(Criteria.where("phone").is(user.getPhone()));
+        Update update = new Update();
+        // 如果字段存在且非空，则进行更新
+        if (existingUser.get().getAge() == null || user.getAge() != null) {
+            update.set("age", user.getAge());
+        }
+        if (existingUser.get().getName() == null || user.getName() != null) {
+            update.set("name", user.getName());
+        }
+        if (existingUser.get().getPasswd() == null || user.getPasswd() != null) {
+            update.set("passwd", user.getPasswd());
+        }
+        if (existingUser.get().getBracelet() == null || user.getBracelet() != null) {
+            update.set("bracelet", user.getBracelet());
+        }
+        if (existingUser.get().getSex() == null || user.getSex() != null) {
+            update.set("sex", user.getSex());
+        }
+        if (existingUser.get().getAvatar() == null || user.getAvatar() != null) {
+            update.set("avatar", user.getAvatar());
+        }
+        if (existingUser.get().getWeight() == null || user.getWeight() != null) {
+            update.set("weight", user.getWeight());
+        }
+        if (existingUser.get().getHeight() == null || user.getHeight() != null) {
+            update.set("height", user.getHeight());
+        }
+
+        // 执行更新操作
+        mongoTemplate.updateFirst(query, update, User.class);
 
         return Optional.of(user);
     }

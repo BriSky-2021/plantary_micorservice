@@ -9,9 +9,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.stubbing.Answer;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -23,8 +26,10 @@ import static org.mockito.Mockito.*;
 @Feature("用户Service层测试")
 class UserServiceImplTest {
     @Mock
-    private UserDao userDao;
+    private UserDao userDao;    // mock userDao，不执行真正的数据库操作
 
+    @Mock
+    private MongoTemplate mongoTemplate;    // mock mongoTemplate，不执行真正的save操作
     @InjectMocks
     private UserServiceImpl userService;
 
@@ -37,22 +42,7 @@ class UserServiceImplTest {
         user.setPasswd("test");
         user.setPhone("17830827328");
         user.setSex("男");
-        // 设置userDao的stub行为
-        // 这里主要设置validatePasswd方法的stub行为
-        // passwd的长度范围是4~50
-        // phone是11位数字, 需要用正则表达式检查是不是11位数字
-        // 输入不在范围内的passwd和phone，抛出IllegalArgumentException
-        // 输入正确的passwd和phone，返回true
-        // 输入错误的passwd和phone，返回false
-
-        // 设计测试用例
-        // 1. passwd的取值可能: 正确/错误/空字符串/null/长度超过50/长度小于4
-        // 2. phone的取值可能: 正确/错误/不符合正则表达式/空字符串/null
-        // 使用doReturn().when()的方式设置stub的返回
-        // 使用doThrow().when()的方式设置stub的抛出异常
-
-        // 使用弱健壮等价类划分法，划分等价类，每次选一个变量取所有的无效值
-        // 1. passwd和phone都取有效值
+        // 1. 测试登录
         // 1.1 passwd和phone都正确
         doReturn(Optional.of(user)).when(userDao).validatePasswd("17830827328", "test");
         // 1.2 passwd正确，phone错误
@@ -61,26 +51,17 @@ class UserServiceImplTest {
         doReturn(Optional.empty()).when(userDao).validatePasswd("17830827328", "test1");
         // 1.4 passwd和phone都错误
         doReturn(Optional.empty()).when(userDao).validatePasswd("17830827329", "test1");
-        // 2. passwd取有效值，phone取无效值
-        // 2.1 passwd正确，phone为空字符串
-        // doThrow(IllegalArgumentException.class).when(userDao).validatePasswd("", "test");
-        // 2.2 passwd正确，phone为null
-        // doThrow(IllegalArgumentException.class).when(userDao).validatePasswd(null, "test");
-        // 2.3 passwd正确，phone不符合正则表达式
-        // doThrow(IllegalArgumentException.class).when(userDao).validatePasswd("1783082732a", "test");
-        // doThrow(IllegalArgumentException.class).when(userDao).validatePasswd("178308273281", "test");
-        // doThrow(IllegalArgumentException.class).when(userDao).validatePasswd("1783082732", "test");
-        // 3. passwd取无效值，phone取有效值
-        // 3.1 passwd为空字符串，phone正确
-        // doThrow(IllegalArgumentException.class).when(userDao).validatePasswd("17830827328", "");
-        // 3.2 passwd为null，phone正确
-        // doThrow(IllegalArgumentException.class).when(userDao).validatePasswd("17830827328", null);
-        // 3.3 passwd长度小于4，phone正确
-        // doThrow(IllegalArgumentException.class).when(userDao).validatePasswd("17830827328", "tes");
-        // 3.4 passwd长度大于50，phone正确
-        // doThrow(IllegalArgumentException.class).when(userDao).validatePasswd("17830827328", Collections.nCopies(51, "a").stream().reduce("", String::concat));
 
-
+        // 2. 测试注册 - 状态迁移树
+        // 使用 doAnswer() 方法模拟 findByPhone() 方法的行为
+        doAnswer((Answer<Optional<User>>) invocation -> {
+            String phone = invocation.getArgument(0);
+            if (phone.equals(user.getPhone())) {
+                return Optional.of(user);  // 已注册的号码，返回 User 对象
+            } else {
+                return Optional.empty();  // 未注册的号码，返回 Optional.empty()
+            }
+        }).when(userDao).findByPhone(ArgumentMatchers.anyString());
     }
 
     @Nested
@@ -133,7 +114,7 @@ class UserServiceImplTest {
         @Story("测试电话为null")
         @DisplayName("2.2 Login Fail Test")
         void login_with_null_phone() {
-            assertThrows(IllegalArgumentException.class, () -> {
+            assertThrows(NullPointerException.class, () -> {
                 userService.login(null, "test");
             });
         }
@@ -166,7 +147,7 @@ class UserServiceImplTest {
         @Story("测试密码为null")
         @DisplayName("3.2 Login Fail Test")
         void login_with_null_password() {
-            assertThrows(IllegalArgumentException.class, () -> {
+            assertThrows(NullPointerException.class, () -> {
                 userService.login("17830827328", null);
             });
         }
@@ -191,4 +172,232 @@ class UserServiceImplTest {
 
     }
 
+    @Nested
+    @DisplayName("Register Stub Test")
+    @Story("使用状态迁移树的方法，测试UserService的register方法")
+    class RegisterStubTest {
+        @Test
+        @DisplayName("测试用例1 - sex为null")
+        @Story("测试sex为null")
+        void register_with_null_sex() {
+            String name = "Emily Davis";
+            String phone = "17830827330";
+            String passwd = "Password123";
+
+            // 构建测试时期望的 User 对象
+            User expectedUser = new User();
+            expectedUser.setName(name);
+            expectedUser.setPhone(phone);
+            expectedUser.setPasswd(passwd);
+
+            // 使用 doAnswer() 方法模拟 insert() 方法的行为
+            doAnswer(invocation -> {
+                User savedUser = invocation.getArgument(0);
+                return expectedUser;  // 返回构建的测试 User 对象
+            }).when(mongoTemplate).insert(any(User.class));
+
+            Optional<User> registerUser = userService.register(name, phone, passwd, null);
+            assertTrue(registerUser.isPresent());
+            assertEquals(name, registerUser.get().getName());
+            assertEquals(phone, registerUser.get().getPhone());
+            assertEquals(passwd, registerUser.get().getPasswd());
+        }
+
+        @Test
+        @DisplayName("测试用例2 - name为最小长度")
+        @Story("测试name为最小长度")
+        void register_with_min_length_name() {
+            String name = "A";
+            String phone = "17830827330";
+            String passwd = "Password123";
+            String sex = "男";
+
+            // 构建测试时期望的 User 对象
+            User expectedUser = new User();
+            expectedUser.setName(name);
+            expectedUser.setPhone(phone);
+            expectedUser.setPasswd(passwd);
+            expectedUser.setSex(sex);
+
+            // 使用 doAnswer() 方法模拟 insert() 方法的行为
+            doAnswer(invocation -> {
+                User savedUser = invocation.getArgument(0);
+                return expectedUser;  // 返回构建的测试 User 对象
+            }).when(mongoTemplate).insert(any(User.class));
+
+            Optional<User> registerUser = userService.register(name, phone, passwd, sex);
+            assertTrue(registerUser.isPresent());
+            assertEquals(name, registerUser.get().getName());
+            assertEquals(phone, registerUser.get().getPhone());
+            assertEquals(passwd, registerUser.get().getPasswd());
+            assertEquals(sex, registerUser.get().getSex());
+        }
+
+        @Test
+        @DisplayName("测试用例3 - name超过最大长度")
+        @Story("测试name超过最大长度")
+        void register_with_max_length_name() {
+            String name = "This is a long name exceeding the maximum length";
+            String phone = "17830827330";
+            String passwd = "Password123";
+            String sex = "男";
+
+            // 抛出IllegalArgumentException异常
+            assertThrows(IllegalArgumentException.class, () -> {
+                userService.register(name, phone, passwd, sex);
+            });
+        }
+
+        @Test
+        @DisplayName("测试用例4 - phone为最小长度")
+        @Story("测试phone为最小长度")
+        void register_with_min_length_phone() {
+            String name = "Emily Davis";
+            String phone = "12345678901";
+            String passwd = "Password123";
+            String sex = "男";
+
+            // 构建测试时期望的 User 对象
+            User expectedUser = new User();
+            expectedUser.setName(name);
+            expectedUser.setPhone(phone);
+            expectedUser.setPasswd(passwd);
+            expectedUser.setSex(sex);
+
+            // 使用 doAnswer() 方法模拟 insert() 方法的行为
+            doAnswer(invocation -> {
+                User savedUser = invocation.getArgument(0);
+                return expectedUser;  // 返回构建的测试 User 对象
+            }).when(mongoTemplate).insert(any(User.class));
+
+            Optional<User> registerUser = userService.register(name, phone, passwd, sex);
+            assertTrue(registerUser.isPresent());
+            assertEquals(name, registerUser.get().getName());
+            assertEquals(phone, registerUser.get().getPhone());
+            assertEquals(passwd, registerUser.get().getPasswd());
+            assertEquals(sex, registerUser.get().getSex());
+        }
+
+        @Test
+        @DisplayName("测试用例5 - phone超过最大长度")
+        @Story("测试phone超过最大长度")
+        void register_with_max_length_phone() {
+            String name = "Emily Davis";
+            String phone = "123456789012";
+            String passwd = "Password123";
+            String sex = "男";
+
+            // 抛出IllegalArgumentException异常
+            assertThrows(IllegalArgumentException.class, () -> {
+                userService.register(name, phone, passwd, sex);
+            });
+        }
+
+        @Test
+        @DisplayName("测试用例6 - phone不是数字")
+        @Story("测试phone不是数字")
+        void register_with_non_numeric_phone() {
+            String name = "Emily Davis";
+            String phone = "abcdefghijk";
+            String passwd = "Password123";
+            String sex = "男";
+
+            // 抛出IllegalArgumentException异常
+            assertThrows(IllegalArgumentException.class, () -> {
+                userService.register(name, phone, passwd, sex);
+            });
+        }
+
+        @Test
+        @DisplayName("测试用例7 - passwd为最小长度")
+        @Story("测试passwd为最小长度")
+        void register_with_min_length_passwd() {
+            String name = "Emily Davis";
+            String phone = "17830827330";
+            String passwd = "Pas";
+            String sex = "男";
+
+            // 抛出IllegalArgumentException异常
+            assertThrows(IllegalArgumentException.class, () -> {
+                userService.register(name, phone, passwd, sex);
+            });
+        }
+
+        @Test
+        @DisplayName("测试用例8 - passwd超过最大长度")
+        @Story("测试passwd超过最大长度")
+        void register_with_max_length_passwd() {
+            String name = "Emily Davis";
+            String phone = "17830827330";
+            String passwd = "Password123456789012345678901234567890123456789012345";
+            String sex = "男";
+
+            // 抛出IllegalArgumentException异常
+            assertThrows(IllegalArgumentException.class, () -> {
+                userService.register(name, phone, passwd, sex);
+            });
+        }
+
+        @Test
+        @DisplayName("测试用例9 - name为null")
+        @Story("测试name为null")
+        void register_with_null_name() {
+            String name = null;
+            String phone = "17830827330";
+            String passwd = "Password123";
+            String sex = "男";
+
+            // 抛出NullPointerException异常
+            assertThrows(NullPointerException.class, () -> {
+                userService.register(name, phone, passwd, sex);
+            });
+        }
+
+        @Test
+        @DisplayName("测试用例10 - phone为null")
+        @Story("测试phone为null")
+        void register_with_null_phone() {
+            String name = "Emily Davis";
+            String phone = null;
+            String passwd = "Password123";
+            String sex = "男";
+
+            // 抛出NullPointerException异常
+            assertThrows(NullPointerException.class, () -> {
+                userService.register(name, phone, passwd, sex);
+            });
+        }
+
+        @Test
+        @DisplayName("测试用例11 - passwd为null")
+        @Story("测试passwd为null")
+        void register_with_null_passwd() {
+            String name = "Emily Davis";
+            String phone = "17830827330";
+            String passwd = null;
+            String sex = "男";
+
+            // 抛出NullPointerException异常
+            assertThrows(NullPointerException.class, () -> {
+                userService.register(name, phone, passwd, sex);
+            });
+        }
+
+        @Test
+        @DisplayName("测试用例12 - 已注册的phone")
+        @Story("测试已注册的phone")
+        void register_with_existing_phone() {
+            String name = "Emily Davis";
+            String phone = "17830827328";
+            String passwd = "Password123";
+            String sex = "男";
+
+            // 使用 doReturn() 方法模拟 findByPhone() 方法的行为，返回已注册的 User 对象
+            doReturn(Optional.of(new User())).when(userDao).findByPhone(phone);
+
+            Optional<User> registerUser = userService.register(name, phone, passwd, sex);
+            assertFalse(registerUser.isPresent());
+        }
+
+    }
 }
