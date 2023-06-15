@@ -34,7 +34,6 @@ public class UserServiceImpl implements UserService {
         return userDao.validatePasswd(phone,passwd);
     }
 
-    // TODO: 测试这个函数
     @Override
     public Optional<User> register(String name, String phone, String passwd ,String sex) {
         // 参数校验
@@ -79,7 +78,6 @@ public class UserServiceImpl implements UserService {
         return userDao.findAll();
     }
 
-    // TODO: 测试这个函数 正交法
     @Override
     public Optional<User> modifyUserInfo(User user) {
         // 检查参数对象和关键字段是否为null

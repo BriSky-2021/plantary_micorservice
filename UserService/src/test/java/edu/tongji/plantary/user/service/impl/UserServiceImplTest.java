@@ -1,10 +1,12 @@
 package edu.tongji.plantary.user.service.impl;
 
+import com.mongodb.client.result.UpdateResult;
 import edu.tongji.plantary.user.dao.UserDao;
 import edu.tongji.plantary.user.entity.User;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
+import org.bson.BsonValue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -15,21 +17,24 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.stubbing.Answer;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 
 import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @Epic("用户Service层测试")
 @Feature("用户Service层测试")
 class UserServiceImplTest {
     @Mock
-    private UserDao userDao;    // mock userDao，不执行真正的数据库操作
+    private UserDao userDao; // mock userDao，不执行真正的数据库操作
 
     @Mock
-    private MongoTemplate mongoTemplate;    // mock mongoTemplate，不执行真正的save操作
+    private MongoTemplate mongoTemplate; // mock mongoTemplate，不执行真正的insert操作
     @InjectMocks
     private UserServiceImpl userService;
 
@@ -57,11 +62,39 @@ class UserServiceImplTest {
         doAnswer((Answer<Optional<User>>) invocation -> {
             String phone = invocation.getArgument(0);
             if (phone.equals(user.getPhone())) {
-                return Optional.of(user);  // 已注册的号码，返回 User 对象
+                return Optional.of(user); // 已注册的号码，返回 User 对象
             } else {
-                return Optional.empty();  // 未注册的号码，返回 Optional.empty()
+                return Optional.empty(); // 未注册的号码，返回 Optional.empty()
             }
         }).when(userDao).findByPhone(ArgumentMatchers.anyString());
+
+        // 3. 测试修改用户信息
+        // 使用 doAnswer() 方法模拟 updateFirst() 方法的行为
+        doAnswer((Answer<UpdateResult>) invocation -> {
+            // do nothing but return an UpdateResult
+            return new UpdateResult() {
+                @Override
+                public boolean wasAcknowledged() {
+                    return false;
+                }
+
+                @Override
+                public long getMatchedCount() {
+                    return 0;
+                }
+
+                @Override
+                public long getModifiedCount() {
+                    return 0;
+                }
+
+                @Override
+                public BsonValue getUpsertedId() {
+                    return null;
+                }
+            };
+        }).when(mongoTemplate).updateFirst((Query) ArgumentMatchers.any(), (UpdateDefinition) ArgumentMatchers.any(),
+                (Class<?>) ArgumentMatchers.any());
     }
 
     @Nested
@@ -105,69 +138,52 @@ class UserServiceImplTest {
         @Story("测试电话为空字符串")
         @DisplayName("2.1 Login Fail Test")
         void login_with_empty_phone() {
-            assertThrows(IllegalArgumentException.class, () -> {
-                userService.login("", "test");
-            });
+            assertThrows(IllegalArgumentException.class, () -> userService.login("", "test"));
         }
 
         @Test
         @Story("测试电话为null")
         @DisplayName("2.2 Login Fail Test")
         void login_with_null_phone() {
-            assertThrows(NullPointerException.class, () -> {
-                userService.login(null, "test");
-            });
+            assertThrows(NullPointerException.class, () -> userService.login(null, "test"));
         }
 
         @Test
         @Story("测试电话不符合正则表达式")
         @DisplayName("2.3 Login Fail Test")
         void login_with_wrong_pattern_phone() {
-            assertThrows(IllegalArgumentException.class, () -> {
-                userService.login("1783082732a", "test");
-            });
-            assertThrows(IllegalArgumentException.class, () -> {
-                userService.login("178308273281", "test");
-            });
-            assertThrows(IllegalArgumentException.class, () -> {
-                userService.login("1783082732", "test");
-            });
+            assertThrows(IllegalArgumentException.class, () -> userService.login("1783082732a", "test"));
+            assertThrows(IllegalArgumentException.class, () -> userService.login("178308273281", "test"));
+            assertThrows(IllegalArgumentException.class, () -> userService.login("1783082732", "test"));
         }
 
         @Test
         @Story("测试密码为空字符串")
         @DisplayName("3.1 Login Fail Test")
         void login_with_empty_password() {
-            assertThrows(IllegalArgumentException.class, () -> {
-                userService.login("17830827328", "");
-            });
+            assertThrows(IllegalArgumentException.class, () -> userService.login("17830827328", ""));
         }
 
         @Test
         @Story("测试密码为null")
         @DisplayName("3.2 Login Fail Test")
         void login_with_null_password() {
-            assertThrows(NullPointerException.class, () -> {
-                userService.login("17830827328", null);
-            });
+            assertThrows(NullPointerException.class, () -> userService.login("17830827328", null));
         }
 
         @Test
         @Story("测试密码长度小于4")
         @DisplayName("3.3 Login Fail Test")
         void login_with_password_length_less_than_4() {
-            assertThrows(IllegalArgumentException.class, () -> {
-                userService.login("17830827328", "tes");
-            });
+            assertThrows(IllegalArgumentException.class, () -> userService.login("17830827328", "tes"));
         }
 
         @Test
         @Story("测试密码长度大于50")
         @DisplayName("3.4 Login Fail Test")
         void login_with_password_length_more_than_50() {
-            assertThrows(IllegalArgumentException.class, () -> {
-                userService.login("17830827328", Collections.nCopies(51, "a").stream().reduce("", String::concat));
-            });
+            assertThrows(IllegalArgumentException.class, () -> userService.login("17830827328",
+                    Collections.nCopies(51, "a").stream().reduce("", String::concat)));
         }
 
     }
@@ -193,7 +209,7 @@ class UserServiceImplTest {
             // 使用 doAnswer() 方法模拟 insert() 方法的行为
             doAnswer(invocation -> {
                 User savedUser = invocation.getArgument(0);
-                return expectedUser;  // 返回构建的测试 User 对象
+                return expectedUser; // 返回构建的测试 User 对象
             }).when(mongoTemplate).insert(any(User.class));
 
             Optional<User> registerUser = userService.register(name, phone, passwd, null);
@@ -222,7 +238,7 @@ class UserServiceImplTest {
             // 使用 doAnswer() 方法模拟 insert() 方法的行为
             doAnswer(invocation -> {
                 User savedUser = invocation.getArgument(0);
-                return expectedUser;  // 返回构建的测试 User 对象
+                return expectedUser; // 返回构建的测试 User 对象
             }).when(mongoTemplate).insert(any(User.class));
 
             Optional<User> registerUser = userService.register(name, phone, passwd, sex);
@@ -243,9 +259,7 @@ class UserServiceImplTest {
             String sex = "男";
 
             // 抛出IllegalArgumentException异常
-            assertThrows(IllegalArgumentException.class, () -> {
-                userService.register(name, phone, passwd, sex);
-            });
+            assertThrows(IllegalArgumentException.class, () -> userService.register(name, phone, passwd, sex));
         }
 
         @Test
@@ -267,7 +281,7 @@ class UserServiceImplTest {
             // 使用 doAnswer() 方法模拟 insert() 方法的行为
             doAnswer(invocation -> {
                 User savedUser = invocation.getArgument(0);
-                return expectedUser;  // 返回构建的测试 User 对象
+                return expectedUser; // 返回构建的测试 User 对象
             }).when(mongoTemplate).insert(any(User.class));
 
             Optional<User> registerUser = userService.register(name, phone, passwd, sex);
@@ -288,9 +302,7 @@ class UserServiceImplTest {
             String sex = "男";
 
             // 抛出IllegalArgumentException异常
-            assertThrows(IllegalArgumentException.class, () -> {
-                userService.register(name, phone, passwd, sex);
-            });
+            assertThrows(IllegalArgumentException.class, () -> userService.register(name, phone, passwd, sex));
         }
 
         @Test
@@ -303,9 +315,7 @@ class UserServiceImplTest {
             String sex = "男";
 
             // 抛出IllegalArgumentException异常
-            assertThrows(IllegalArgumentException.class, () -> {
-                userService.register(name, phone, passwd, sex);
-            });
+            assertThrows(IllegalArgumentException.class, () -> userService.register(name, phone, passwd, sex));
         }
 
         @Test
@@ -318,9 +328,7 @@ class UserServiceImplTest {
             String sex = "男";
 
             // 抛出IllegalArgumentException异常
-            assertThrows(IllegalArgumentException.class, () -> {
-                userService.register(name, phone, passwd, sex);
-            });
+            assertThrows(IllegalArgumentException.class, () -> userService.register(name, phone, passwd, sex));
         }
 
         @Test
@@ -333,24 +341,19 @@ class UserServiceImplTest {
             String sex = "男";
 
             // 抛出IllegalArgumentException异常
-            assertThrows(IllegalArgumentException.class, () -> {
-                userService.register(name, phone, passwd, sex);
-            });
+            assertThrows(IllegalArgumentException.class, () -> userService.register(name, phone, passwd, sex));
         }
 
         @Test
         @DisplayName("测试用例9 - name为null")
         @Story("测试name为null")
         void register_with_null_name() {
-            String name = null;
             String phone = "17830827330";
             String passwd = "Password123";
             String sex = "男";
 
             // 抛出NullPointerException异常
-            assertThrows(NullPointerException.class, () -> {
-                userService.register(name, phone, passwd, sex);
-            });
+            assertThrows(NullPointerException.class, () -> userService.register(null, phone, passwd, sex));
         }
 
         @Test
@@ -358,14 +361,11 @@ class UserServiceImplTest {
         @Story("测试phone为null")
         void register_with_null_phone() {
             String name = "Emily Davis";
-            String phone = null;
             String passwd = "Password123";
             String sex = "男";
 
             // 抛出NullPointerException异常
-            assertThrows(NullPointerException.class, () -> {
-                userService.register(name, phone, passwd, sex);
-            });
+            assertThrows(NullPointerException.class, () -> userService.register(name, null, passwd, sex));
         }
 
         @Test
@@ -374,13 +374,10 @@ class UserServiceImplTest {
         void register_with_null_passwd() {
             String name = "Emily Davis";
             String phone = "17830827330";
-            String passwd = null;
             String sex = "男";
 
             // 抛出NullPointerException异常
-            assertThrows(NullPointerException.class, () -> {
-                userService.register(name, phone, passwd, sex);
-            });
+            assertThrows(NullPointerException.class, () -> userService.register(name, phone, null, sex));
         }
 
         @Test
@@ -398,6 +395,266 @@ class UserServiceImplTest {
             Optional<User> registerUser = userService.register(name, phone, passwd, sex);
             assertFalse(registerUser.isPresent());
         }
+
+    }
+
+    @Nested
+    @DisplayName("ModifyUserInfo测试")
+    @Story("使用正交表法对ModifyUserInfo方法进行测试")
+    class ModifyUserInfoStubTest {
+
+        @Test
+        @DisplayName("测试用例 - 1")
+        @Story("测试用例 - 1")
+        void test_case_1() {
+            // null null null null "1" "男" null 171
+            User user = new User();
+            user.setName(null);
+            user.setAge(null);
+            user.setPasswd(null);
+            user.setPhone(null);
+            user.setBracelet("1");
+            user.setSex("男");
+            user.setAvatar(null);
+            user.setHeight(171.0);
+            assertThrows(NullPointerException.class, () -> userService.modifyUserInfo(user));
+        }
+
+        @Test
+        @DisplayName("测试用例 - 2")
+        @Story("测试用例 - 2")
+        void test_case_2() {
+            // "new name" null "new passwd" null "1" null
+            // "https://s2.loli.net/2023/05/21/i3MvyxqobgmreKn.png" 171
+            User user = new User();
+            user.setName("new name");
+            user.setAge(null);
+            user.setPasswd("new passwd");
+            user.setPhone(null);
+            user.setBracelet("1");
+            user.setSex(null);
+            user.setAvatar("https://s2.loli.net/2023/05/21/i3MvyxqobgmreKn.png");
+            user.setHeight(171.0);
+            assertThrows(NullPointerException.class, () -> userService.modifyUserInfo(user));
+        }
+
+        @Test
+        @DisplayName("测试用例 - 3")
+        @Story("测试用例 - 3")
+        void test_case_3() {
+            // null 21 "new passwd" "17830827328" "1" "男" null 171
+            User user = new User();
+            user.setName(null);
+            user.setAge(21);
+            user.setPasswd("new passwd");
+            user.setPhone("17830827328");
+            user.setBracelet("1");
+            user.setSex("男");
+            user.setAvatar(null);
+            user.setHeight(171.0);
+            // 检查new_user是否存在
+            Optional<User> new_user = userService.modifyUserInfo(user);
+            assertTrue(new_user.isPresent());
+            // 检查用户字段是否匹配
+            assertEquals(user.getAge(), new_user.get().getAge());
+            assertEquals(user.getPasswd(), new_user.get().getPasswd());
+            assertEquals(user.getPhone(), new_user.get().getPhone());
+            assertEquals(user.getBracelet(), new_user.get().getBracelet());
+            assertEquals(user.getSex(), new_user.get().getSex());
+            assertEquals(user.getHeight(), new_user.get().getHeight());
+        }
+
+        @Test
+        @DisplayName("测试用例 - 4")
+        @Story("测试用例 - 4")
+        void test_case_4() {
+            // "new name" 21 null null "1" "男" "https://s2.loli.net/2023/05/21/i3MvyxqobgmreKn.png" 171
+            User user = new User();
+            user.setName("new name");
+            user.setAge(21);
+            user.setPasswd(null);
+            user.setPhone(null);
+            user.setBracelet("1");
+            user.setSex("男");
+            user.setAvatar("https://s2.loli.net/2023/05/21/i3MvyxqobgmreKn.png");
+            user.setHeight(171.0);
+            assertThrows(NullPointerException.class, () -> userService.modifyUserInfo(user));
+        }
+
+        @Test
+        @DisplayName("测试用例 - 5")
+        @Story("测试用例 - 5")
+        void test_case_5() {
+            // null null "new passwd" "17830827328" null "男" "https://s2.loli.net/2023/05/21/i3MvyxqobgmreKn.png" 171
+            User user = new User();
+            user.setName(null);
+            user.setAge(null);
+            user.setPasswd("new passwd");
+            user.setPhone("17830827328");
+            user.setBracelet(null);
+            user.setSex("男");
+            user.setAvatar("https://s2.loli.net/2023/05/21/i3MvyxqobgmreKn.png");
+            user.setHeight(171.0);
+
+            // 修改用户信息并检查返回的新用户是否存在
+            Optional<User> new_user = userService.modifyUserInfo(user);
+            assertTrue(new_user.isPresent());
+
+            // 检查用户字段是否匹配
+            assertNull(new_user.get().getName());
+            assertNull(new_user.get().getAge());
+            assertEquals(user.getPasswd(), new_user.get().getPasswd());
+            assertEquals(user.getPhone(), new_user.get().getPhone());
+            assertNull(new_user.get().getBracelet());
+            assertEquals(user.getSex(), new_user.get().getSex());
+            assertEquals(user.getAvatar(), new_user.get().getAvatar());
+            assertEquals(user.getHeight(), new_user.get().getHeight());
+        }
+
+
+
+        @Test
+        @DisplayName("测试用例 - 6")
+        @Story("测试用例 - 6")
+        void test_case_6() {
+            // "new name" null "new passwd" null null "男" "https://s2.loli.net/2023/05/21/i3MvyxqobgmreKn.png" null
+            User user = new User();
+            user.setName("new name");
+            user.setAge(null);
+            user.setPasswd("new passwd");
+            user.setPhone(null);
+            user.setBracelet(null);
+            user.setSex("男");
+            user.setAvatar("https://s2.loli.net/2023/05/21/i3MvyxqobgmreKn.png");
+            user.setHeight(null);
+            assertThrows(NullPointerException.class, () -> userService.modifyUserInfo(user));
+        }
+
+        @Test
+        @DisplayName("测试用例 - 7")
+        @Story("测试用例 - 7")
+        void test_case_7() {
+            // null 21 null null null null "https://s2.loli.net/2023/05/21/i3MvyxqobgmreKn.png" 171
+            User user = new User();
+            user.setName(null);
+            user.setAge(21);
+            user.setPasswd(null);
+            user.setPhone(null);
+            user.setBracelet(null);
+            user.setSex(null);
+            user.setAvatar("https://s2.loli.net/2023/05/21/i3MvyxqobgmreKn.png");
+            user.setHeight(171.0);
+            assertThrows(NullPointerException.class, () -> userService.modifyUserInfo(user));
+        }
+
+        @Test
+        @DisplayName("测试用例 - 8")
+        @Story("测试用例 - 8")
+        void test_case_8() {
+            // "new name" 21 null "17830827328" null "男" null null
+            User user = new User();
+            user.setName("new name");
+            user.setAge(21);
+            user.setPasswd(null);
+            user.setPhone("17830827328");
+            user.setBracelet(null);
+            user.setSex("男");
+            user.setAvatar(null);
+            user.setHeight(null);
+            // 检查new_user是否存在
+            Optional<User> new_user = userService.modifyUserInfo(user);
+            assertTrue(new_user.isPresent());
+            // 检查用户字段是否匹配
+            assertEquals(user.getName(), new_user.get().getName());
+            assertEquals(user.getAge(), new_user.get().getAge());
+            assertEquals(user.getPhone(), new_user.get().getPhone());
+            assertEquals(user.getSex(), new_user.get().getSex());
+        }
+
+        @Test
+        @DisplayName("测试用例 - 9")
+        @Story("测试用例 - 9")
+        void test_case_9() {
+            // null null null null "1" "男" null null
+            User user = new User();
+            user.setName(null);
+            user.setAge(null);
+            user.setPasswd(null);
+            user.setPhone(null);
+            user.setBracelet("1");
+            user.setSex("男");
+            user.setAvatar(null);
+            user.setHeight(null);
+            assertThrows(NullPointerException.class, () -> userService.modifyUserInfo(user));
+        }
+
+        @Test
+        @DisplayName("测试用例 - 10")
+        @Story("测试用例 - 10")
+        void test_case_10() {
+            // "new name" null null "17830827328" null "男" null 171
+            User user = new User();
+            user.setName("new name");
+            user.setAge(null);
+            user.setPasswd(null);
+            user.setPhone("17830827328");
+            user.setBracelet(null);
+            user.setSex("男");
+            user.setAvatar(null);
+            user.setHeight(171.0);
+            // 检查new_user是否存在
+            Optional<User> new_user = userService.modifyUserInfo(user);
+            assertTrue(new_user.isPresent());
+            // 检查用户字段是否匹配
+            assertEquals(user.getName(), new_user.get().getName());
+            assertEquals(user.getPhone(), new_user.get().getPhone());
+            assertEquals(user.getSex(), new_user.get().getSex());
+            assertEquals(user.getHeight(), new_user.get().getHeight());
+        }
+
+        @Test
+        @DisplayName("测试用例 - 11")
+        @Story("测试用例 - 11")
+        void test_case_11() {
+            // null 21 "new passwd" null null null null null
+            User user = new User();
+            user.setName(null);
+            user.setAge(21);
+            user.setPasswd("new passwd");
+            user.setPhone(null);
+            user.setBracelet(null);
+            user.setSex(null);
+            user.setAvatar(null);
+            user.setHeight(null);
+            assertThrows(NullPointerException.class, () -> userService.modifyUserInfo(user));
+        }
+
+        @Test
+        @DisplayName("测试用例 - 12")
+        @Story("测试用例 - 12")
+        void test_case_12() {
+            // "new name" 21 "new passwd" "17830827328" "1" null "https://s2.loli.net/2023/05/21/i3MvyxqobgmreKn.png" null
+            User user = new User();
+            user.setName("new name");
+            user.setAge(21);
+            user.setPasswd("new passwd");
+            user.setPhone("17830827328");
+            user.setBracelet("1");
+            user.setSex(null);
+            user.setAvatar("https://s2.loli.net/2023/05/21/i3MvyxqobgmreKn.png");
+            user.setHeight(null);
+            // 检查new_user是否存在
+            Optional<User> new_user = userService.modifyUserInfo(user);
+            assertTrue(new_user.isPresent());
+            // 检查用户字段是否匹配
+            assertEquals(user.getName(), new_user.get().getName());
+            assertEquals(user.getAge(), new_user.get().getAge());
+            assertEquals(user.getPasswd(), new_user.get().getPasswd());
+            assertEquals(user.getPhone(), new_user.get().getPhone());
+            assertEquals(user.getBracelet(), new_user.get().getBracelet());
+            assertEquals(user.getAvatar(), new_user.get().getAvatar());
+        }
+
 
     }
 }
